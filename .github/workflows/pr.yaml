@@ -2,6 +2,9 @@
 # Stage 1: Linux tests with 90% coverage requirement
 # Stage 2: Windows .NET Core and .NET Framework tests (only if Linux passes)
 # Stage 3: macOS tests (only if Stage 2 passes)
+#
+# This is a reusable workflow called by pr-trigger.yaml
+# All checkout steps use github.event.pull_request.head.sha to ensure the PR's code is tested
 
 name: PR Checks v3 (Gated)
 
@@ -9,7 +12,7 @@ permissions:
   contents: read
   
 on:
-  # Allow this workflow to be called by other workflows
+  # Allow this workflow to be called by other workflows (specifically pr-trigger.yaml)
   workflow_call:
 jobs:
   # ============================================================================

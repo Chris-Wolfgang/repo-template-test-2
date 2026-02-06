@@ -1,6 +1,12 @@
 # PR Trigger Workflow
 # This workflow runs from the main branch and calls the pr.yaml workflow
 # This ensures that the workflow definition from main is always used, even for PRs from feature branches
+#
+# SECURITY NOTE:
+# - Uses pull_request_target to run workflow from main branch (not PR branch)
+# - This prevents malicious workflow modifications in untrusted PR branches
+# - The called pr.yaml explicitly checks out the PR's code using github.event.pull_request.head.sha
+# - Permissions are restricted to read-only access to repository contents
 
 name: PR Validation (Main Branch)
 
@@ -8,7 +14,7 @@ permissions:
   contents: read
 
 on:
-  pull_request_target:
+  pull_request_target:  # Runs from base branch (main), not from PR branch
     branches:
       - main
       - develop
@@ -20,5 +26,5 @@ jobs:
   call-pr-workflow:
     name: "Execute PR Checks from Main Branch"
     uses: ./.github/workflows/pr.yaml
-    # This will use the workflow file from the base branch (main)
-    # instead of from the PR branch
+    permissions:
+      contents: read  # Explicitly limit permissions for the called workflow
