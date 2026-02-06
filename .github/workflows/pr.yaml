@@ -448,12 +448,15 @@ jobs:
           echo ""
           echo ".NET Core 5.0 are tested on Linux and Windows"
           echo ""
-          echo "==========================================" 
-          echo "✅ ALL STAGES PASSED" 
-          echo "==========================================" 
-          echo "Stage 1: Linux tests + 90% coverage ✅" 
-          echo "Stage 2: Windows .NET Core & .NET Framework tests ✅" 
-          echo "Stage 3: macOS tests ✅" 
+
+      - name: Summarize pipeline result
+        run: |
+          echo "=========================================="
+          echo "✅ ALL STAGES PASSED"
+          echo "=========================================="
+          echo "Stage 1: Linux tests + 90% coverage ✅"
+          echo "Stage 2: Windows .NET Core & .NET Framework tests ✅"
+          echo "Stage 3: macOS tests ✅"
           echo ""
           echo "PR is ready to merge! 🎉"
 
