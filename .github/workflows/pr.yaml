@@ -3,7 +3,7 @@
 # Stage 2: Windows .NET Core and .NET Framework tests (only if Linux passes)
 # Stage 3: macOS tests (only if Stage 2 passes)
 
-name: PR Checks v2 (Gated)
+name: PR Checks v3 (Gated)
 
 permissions:
   contents: read
