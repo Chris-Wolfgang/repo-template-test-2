@@ -29,16 +29,13 @@ Below is a list of what needs to be done. Once you have completed the checklist 
 Prevent Merging When Checks Fail
 These settings require that all checks in the pr.yaml file succeed before you can merge a branch into main
 
-**Note:** The repository uses two workflows for PR validation:
-- `pr-trigger.yaml` - Triggers on pull requests and always runs from the main branch
-- `pr.yaml` - The actual validation workflow that is called by pr-trigger.yaml
 
-This ensures that the workflow definition from main is always used, even for PRs from feature branches.
+**Note:** The pr.yaml workflow uses `pull_request_target` to always run from the main branch, even for PRs from feature branches. This prevents malicious workflow modifications in untrusted PR branches while still testing the PR's code.
 
 1. Go to your repository’s Settings → Branches.
 2. Under “Branch protection rules,” edit the rule for main.
 3. Check “Require status checks to pass before merging.”
-4. Select "PR Validation (Main Branch)" workflow (it will be listed after it runs at least once).
+4. Select "PR Checks v3 (Gated)" workflow (it will be listed after it runs at least once).
 5. Enable “Require branches to be up to date before merging.”
 6. Check `Restrict deletions`
 7. Check `Require a pull request before merging`
