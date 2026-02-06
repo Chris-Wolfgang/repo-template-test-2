@@ -4,7 +4,7 @@
 # Stage 3: macOS tests (only if Stage 2 passes)
 #
 # This is a reusable workflow called by pr-trigger.yaml
-# All checkout steps use github.event.pull_request.head.sha to ensure the PR's code is tested
+# All checkout steps use inputs.pr-sha to test the PR's code
 
 name: PR Checks v3 (Gated)
 
@@ -14,6 +14,11 @@ permissions:
 on:
   # Allow this workflow to be called by other workflows (specifically pr-trigger.yaml)
   workflow_call:
+    inputs:
+      pr-sha:
+        description: 'The SHA of the PR head commit to checkout and test'
+        required: false
+        type: string
 jobs:
   # ============================================================================
   # STAGE 1: Linux - .NET Core/5+ Tests with Coverage Gate
@@ -27,7 +32,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ inputs.pr-sha || github.sha }}
 
       # Fix for .NET 5.0 on Ubuntu 22.04+ - install libssl1.1
       - name: Install OpenSSL 1.1 for .NET 5.0
@@ -215,7 +220,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ inputs.pr-sha || github.sha }}
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -283,7 +288,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ inputs.pr-sha || github.sha }}
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -349,7 +354,7 @@ jobs:
       - name:  Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ inputs.pr-sha || github.sha }}
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -478,7 +483,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ inputs.pr-sha || github.sha }}
 
       - name: Install DevSkim CLI
         run: dotnet tool install --global Microsoft.CST.DevSkim.CLI
