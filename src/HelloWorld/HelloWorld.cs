@@ -8,9 +8,6 @@ namespace HelloWorld;
 /// </summary>
 public class HelloWorld
 {
-
-
-    
     /// <summary>
     /// Prints "Hello World" to the console.
     /// </summary>
