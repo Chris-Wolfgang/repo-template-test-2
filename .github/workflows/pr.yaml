@@ -246,7 +246,7 @@ jobs:
           
           # Find all .csproj, .vbproj, and .fsproj files
           # Exclude those with 'dotnet4' or 'DotNet4' in the path (case-insensitive)
-          $projects = Get-ChildItem -Path . -Recurse -Include *.csproj,*.vbproj,*.fsproj | Where-Object { $_.FullName -notmatch 'dotnet4' }
+          $projects = Get-ChildItem -Path . -Recurse -Include *.csproj,*.vbproj,*.fsproj | Where-Object { $_.FullName -inotmatch 'dotnet4' }
           
           if ($projects.Count -eq 0) {
             Write-Error "No projects found!"
