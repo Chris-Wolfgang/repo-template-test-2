@@ -205,8 +205,8 @@ jobs:
   # ============================================================================
   # STAGE 2: Windows - .NET Core/5+ and .NET Framework Tests (Gated by Stage 1)
   # ============================================================================
-  test-windows-core:
-    name: "Stage 2a: Windows Tests (.NET 5.0-10.0)"
+  test-windows:
+    name: "Stage 2: Windows Tests (.NET 5.0-10.0 + .NET Framework 4.6.2-4.8.1)"
     runs-on: windows-latest
     needs: test-linux-core
     if: github.repository != 'Chris-Wolfgang/repo-template'
@@ -225,67 +225,6 @@ jobs:
             8.0.x
             9.0.x
             10.0.x
-
-      - name: Restore dependencies
-        run: dotnet restore
-
-      - name: Build solution
-        run: dotnet build --no-restore --configuration Release
-
-      - name: Run tests (.NET Core 5.0 - 10.0)
-        shell: pwsh
-        run: |
-          $testProjects = Get-ChildItem -Path './tests' -Recurse -Filter '*.csproj'
-          
-          if ($testProjects.Count -eq 0) {
-            Write-Error "❌ No test projects found in ./tests directory!"
-            exit 1
-          }
-          
-          Write-Host "==========================================" -ForegroundColor Cyan
-          Write-Host "Found test projects:" -ForegroundColor Cyan
-          Write-Host "==========================================" -ForegroundColor Cyan
-          $testProjects | ForEach-Object { Write-Host $_.FullName -ForegroundColor White }
-          Write-Host ""
-          
-          $frameworks = @('net5.0', 'net6.0', 'net7.0', 'net8.0', 'net9.0', 'net10.0')
-          
-          foreach ($testProj in $testProjects) {
-            Write-Host "==========================================" -ForegroundColor Cyan
-            Write-Host "Testing project: $($testProj.FullName)" -ForegroundColor Cyan
-            Write-Host "==========================================" -ForegroundColor Cyan
-            
-            foreach ($fw in $frameworks) {
-              Write-Host "Testing framework:  $fw" -ForegroundColor Yellow
-              
-              dotnet test $testProj.FullName `
-                --configuration Release `
-                --framework $fw `
-                --logger "console;verbosity=normal"
-              
-              if ($LASTEXITCODE -ne 0) {
-                Write-Error "Tests failed for $fw in $($testProj.Name)"
-                exit 1
-              }
-            }
-            Write-Host ""
-          }
-
-  test-windows-framework: 
-    name: "Stage 2b: Windows .NET Framework Tests (4.6.2-4.8.1)"
-    runs-on: windows-latest
-    needs: test-linux-core
-    if: github.repository != 'Chris-Wolfgang/repo-template'
-    
-    steps: 
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: |
-            8.0.x
 
       - name: Install .NET Framework Developer Packs (4.6.2, 4.7.2, 4.8.1)
         shell: pwsh
@@ -348,7 +287,7 @@ jobs:
       - name: Build solution
         run: dotnet build --no-restore --configuration Release
 
-      - name:  Run .NET Framework tests (4.6.2 - 4.8.1)
+      - name: Run tests (All frameworks)
         shell: pwsh
         run: |
           $testProjects = Get-ChildItem -Path './tests' -Recurse -Filter '*.csproj'
@@ -364,7 +303,8 @@ jobs:
           $testProjects | ForEach-Object { Write-Host $_.FullName -ForegroundColor White }
           Write-Host ""
           
-          $frameworks = @('net462', 'net472', 'net48', 'net481')
+          # Test both .NET Core/5+ and .NET Framework versions
+          $frameworks = @('net5.0', 'net6.0', 'net7.0', 'net8.0', 'net9.0', 'net10.0', 'net462', 'net472', 'net48', 'net481')
           
           foreach ($testProj in $testProjects) {
             Write-Host "==========================================" -ForegroundColor Cyan
@@ -393,7 +333,7 @@ jobs:
   test-macos-core:
     name: "Stage 3: macOS Tests (.NET 6.0-10.0)"
     runs-on: macos-latest
-    needs: [test-windows-core, test-windows-framework]
+    needs: test-windows
     if: github.repository != 'Chris-Wolfgang/repo-template'
     
     steps:
