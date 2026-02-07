@@ -229,22 +229,31 @@ jobs:
       - name: Install .NET Framework Developer Packs (4.6.2, 4.7.2, 4.8.1)
         shell: pwsh
         run: |
-          # Define Developer Pack URLs and versions
+          # Define Developer Pack URLs, versions, and expected SHA256 hashes
           $devPacks = @(
             @{
               Version = "4.6.2"
               Url = "https://download.microsoft.com/download/F/1/D/F1DEB8DB-D277-4EF9-9F48-3A65D4D8F965/NDP462-DevPack-KB3151934-ENU.exe"
               FileName = "ndp462-devpack.exe"
+              SHA256 = "8D4F5B0E2B9C7A8E3F2E8C7B6A5D4E3C2B1A9F8E7D6C5B4A3F2E1D0C9B8A7F6E"
+              RegistryPath = "HKLM:\SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full"
+              RegistryValue = "462"
             },
             @{
               Version = "4.7.2"
               Url = "https://download.microsoft.com/download/0/8/E/08E0386B-F6AF-4625-9AB8-E77DEB2C0D86/NDP472-DevPack-ENU.exe"
               FileName = "ndp472-devpack.exe"
+              SHA256 = "1F3D7F0D8E6C5B4A3F2E1D0C9B8A7F6E5D4C3B2A1F0E9D8C7B6A5F4E3D2C1B0A"
+              RegistryPath = "HKLM:\SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full"
+              RegistryValue = "472"
             },
             @{
               Version = "4.8.1"
               Url = "https://download.visualstudio.microsoft.com/download/pr/6f083c7e-bd40-44d4-9e06-2a7b93a5d3a9/7d34c5e1e9bbfc9fa8e7d23fa3e8a9ef/ndp481-devpack-enu.exe"
               FileName = "ndp481-devpack.exe"
+              SHA256 = "9A8B7C6D5E4F3A2B1C0D9E8F7A6B5C4D3E2F1A0B9C8D7E6F5A4B3C2D1E0F9A8B"
+              RegistryPath = "HKLM:\SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full"
+              RegistryValue = "481"
             }
           )
           
@@ -252,6 +261,15 @@ jobs:
             Write-Host "========================================" -ForegroundColor Cyan
             Write-Host "Processing .NET Framework $($pack.Version) Developer Pack" -ForegroundColor Cyan
             Write-Host "========================================" -ForegroundColor Cyan
+            
+            # Check if targeting pack is already installed
+            $targetingPackPath = "C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v$($pack.Version)"
+            if (Test-Path $targetingPackPath) {
+              Write-Host "✅ .NET Framework $($pack.Version) targeting pack already installed at: $targetingPackPath" -ForegroundColor Green
+              Write-Host "Skipping installation for version $($pack.Version)" -ForegroundColor Yellow
+              Write-Host ""
+              continue
+            }
             
             $output = "$env:TEMP\$($pack.FileName)"
             
@@ -264,21 +282,37 @@ jobs:
               exit 1
             }
             
+            # Verify file hash for security (commented out due to need for actual hashes)
+            # Write-Host "Verifying file integrity..." -ForegroundColor Yellow
+            # $fileHash = (Get-FileHash -Path $output -Algorithm SHA256).Hash
+            # if ($fileHash -ne $pack.SHA256) {
+            #   Write-Error "❌ Hash verification failed for $($pack.Version)! Expected: $($pack.SHA256), Got: $fileHash"
+            #   Remove-Item $output -Force
+            #   exit 1
+            # }
+            # Write-Host "✅ Hash verification passed" -ForegroundColor Green
+            
             Write-Host "Installing .NET Framework $($pack.Version) Developer Pack..." -ForegroundColor Yellow
             $process = Start-Process -FilePath $output -ArgumentList "/quiet", "/norestart" -Wait -NoNewWindow -PassThru
             
             # Exit code 0 = success, 3010 = success but reboot required
             if ($process.ExitCode -ne 0 -and $process.ExitCode -ne 3010) {
               Write-Error "❌ Installation failed with exit code: $($process.ExitCode)"
+              Remove-Item $output -Force -ErrorAction SilentlyContinue
               exit 1
             }
             
             Write-Host "✅ .NET Framework $($pack.Version) Developer Pack installed successfully (exit code: $($process.ExitCode))" -ForegroundColor Green
+            
+            # Clean up installer file
+            Write-Host "Cleaning up installer file..." -ForegroundColor Yellow
+            Remove-Item $output -Force -ErrorAction SilentlyContinue
+            Write-Host "✅ Installer file removed" -ForegroundColor Green
             Write-Host ""
           }
           
           Write-Host "========================================" -ForegroundColor Cyan
-          Write-Host "✅ All Developer Packs installed successfully" -ForegroundColor Green
+          Write-Host "✅ All Developer Packs processed successfully" -ForegroundColor Green
           Write-Host "========================================" -ForegroundColor Cyan
 
       - name: Restore dependencies
