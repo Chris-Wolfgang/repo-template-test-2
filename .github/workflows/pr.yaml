@@ -248,6 +248,9 @@ jobs:
             }
           )
           
+          $installed = 0
+          $skipped = 0
+          
           foreach ($pack in $devPacks) {
             Write-Host "========================================" -ForegroundColor Cyan
             Write-Host "Processing .NET Framework $($pack.Version) Developer Pack" -ForegroundColor Cyan
@@ -259,6 +262,7 @@ jobs:
               Write-Host "✅ .NET Framework $($pack.Version) targeting pack already installed at: $targetingPackPath" -ForegroundColor Green
               Write-Host "Skipping installation for version $($pack.Version)" -ForegroundColor Yellow
               Write-Host ""
+              $skipped++
               continue
             }
             
@@ -284,6 +288,7 @@ jobs:
             }
             
             Write-Host "✅ .NET Framework $($pack.Version) Developer Pack installed successfully (exit code: $($process.ExitCode))" -ForegroundColor Green
+            $installed++
             
             # Clean up installer file
             Write-Host "Cleaning up installer file..." -ForegroundColor Yellow
@@ -293,7 +298,10 @@ jobs:
           }
           
           Write-Host "========================================" -ForegroundColor Cyan
-          Write-Host "✅ All Developer Packs processed successfully" -ForegroundColor Green
+          Write-Host "✅ Developer Pack Installation Summary" -ForegroundColor Green
+          Write-Host "   Installed: $installed" -ForegroundColor White
+          Write-Host "   Skipped (already present): $skipped" -ForegroundColor White
+          Write-Host "   Total processed: $($installed + $skipped)" -ForegroundColor White
           Write-Host "========================================" -ForegroundColor Cyan
 
       - name: Restore dependencies
