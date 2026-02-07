@@ -287,6 +287,20 @@ jobs:
           dotnet-version: |
             8.0.x
 
+      - name: Install .NET Framework 4.6.2 Developer Pack
+        shell: pwsh
+        run: |
+          Write-Host "Downloading .NET Framework 4.6.2 Developer Pack..." -ForegroundColor Cyan
+          $url = "https://download.microsoft.com/download/F/1/D/F1DEB8DB-D277-4EF9-9F48-3A65D4D8F965/NDP462-DevPack-KB3151934-ENU.exe"
+          $output = "$env:TEMP\ndp462-devpack.exe"
+          
+          Invoke-WebRequest -Uri $url -OutFile $output -UseBasicParsing
+          
+          Write-Host "Installing .NET Framework 4.6.2 Developer Pack..." -ForegroundColor Cyan
+          Start-Process -FilePath $output -ArgumentList "/quiet", "/norestart" -Wait -NoNewWindow
+          
+          Write-Host "✅ .NET Framework 4.6.2 Developer Pack installed successfully" -ForegroundColor Green
+
       - name: Restore dependencies
         run: dotnet restore
 
