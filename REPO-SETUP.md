@@ -54,10 +54,12 @@ These settings require that all checks in the pr.yaml file succeed before you ca
 
 ## Add Custom Labels
 
-1. On the `Actions` tab select `Create Custom Labels`
-2. Select `Run workflow`
-3. Select `main` branch and click `Run`
-You will need to create the following custom labels
+1. Go to your repository
+2. Click on the `Actions` tab
+3. Select `Create Dependabot Security and Dependencies Labels` from the workflow list
+4. Click `Run workflow` button
+5. Select the branch `main` and click `Run workflow`
+6. This will create all four labels:
 
 If that doesn't work try the following
 
