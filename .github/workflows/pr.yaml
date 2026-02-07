@@ -213,10 +213,10 @@ jobs:
             tests/**/bin/Release
 
   # ============================================================================
-  # STAGE 2: Windows - .NET Core/5+ and .NET Framework Tests (Gated by Stage 1)
+  # STAGE 2: Windows - All .NET Tests (Gated by Stage 1)
   # ============================================================================
-  test-windows-core:
-    name: "Stage 2a: Windows Tests (.NET 5.0-10.0)"
+  test-windows:
+    name: "Stage 2: Windows Tests (All .NET versions)"
     runs-on: windows-latest
     needs: test-linux-core
     if: github.repository != 'Chris-Wolfgang/repo-template'
@@ -239,45 +239,11 @@ jobs:
             9.0.x
             10.0.x
 
-      - name: Restore and build (exclude .NET Framework 4.x projects)
-        shell: pwsh
-        run: |
-          Write-Host "Finding all projects in solution..." -ForegroundColor Cyan
-          
-          # Find all .csproj, .vbproj, and .fsproj files
-          # Exclude those with 'dotnet4' in the path (case-insensitive match)
-          $projects = Get-ChildItem -Path . -Recurse -Include *.csproj,*.vbproj,*.fsproj | Where-Object { $_.FullName -inotmatch 'dotnet4' }
-          
-          if ($projects.Count -eq 0) {
-            Write-Error "No projects found!"
-            exit 1
-          }
-          
-          Write-Host "==========================================" -ForegroundColor Cyan
-          Write-Host "Projects to build (excluding .NET Framework 4.x):" -ForegroundColor Cyan
-          Write-Host "==========================================" -ForegroundColor Cyan
-          $projects | ForEach-Object { Write-Host $_.FullName -ForegroundColor White }
-          Write-Host ""
-          
-          # Restore each project
-          Write-Host "Restoring projects..." -ForegroundColor Yellow
-          foreach ($proj in $projects) {
-            Write-Host "Restoring: $($proj.FullName)" -ForegroundColor White
-            dotnet restore $proj.FullName
-            if ($LASTEXITCODE -ne 0) { exit 1 }
-          }
-          
-          Write-Host ""
-          Write-Host "Building projects..." -ForegroundColor Yellow
-          # Build each project
-          foreach ($proj in $projects) {
-            Write-Host "Building: $($proj.FullName)" -ForegroundColor White
-            dotnet build $proj.FullName --no-restore --configuration Release
-            if ($LASTEXITCODE -ne 0) { exit 1 }
-          }
-          
-          Write-Host ""
-          Write-Host "✅ All compatible projects built successfully" -ForegroundColor Green
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build solution
+        run: dotnet build --no-restore --configuration Release
 
       - name: Run tests (.NET Core 5.0 - 10.0)
         shell: pwsh
@@ -318,32 +284,7 @@ jobs:
             Write-Host ""
           }
 
-  test-windows-framework: 
-    name: "Stage 2b: Windows .NET Framework Tests (4.6.2-4.8.1)"
-    runs-on: windows-latest
-    needs: test-linux-core
-    if: github.repository != 'Chris-Wolfgang/repo-template'
-    
-    steps: 
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          ref: refs/pull/${{ github.event.pull_request.number }}/head
-          persist-credentials: false
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: |
-            8.0.x
-
-      - name: Restore dependencies
-        run: dotnet restore
-
-      - name: Build solution
-        run: dotnet build --no-restore --configuration Release
-
-      - name:  Run .NET Framework tests (4.6.2 - 4.8.1)
+      - name: Run .NET Framework tests (4.6.2 - 4.8.1)
         shell: pwsh
         run: |
           $testProjects = Get-ChildItem -Path './tests' -Recurse -Filter '*.csproj'
@@ -388,7 +329,7 @@ jobs:
   test-macos-core:
     name: "Stage 3: macOS Tests (.NET 6.0-10.0)"
     runs-on: macos-latest
-    needs: [test-windows-core, test-windows-framework]
+    needs: test-windows
     if: github.repository != 'Chris-Wolfgang/repo-template'
     
     steps:
