@@ -2,6 +2,14 @@
 # Stage 1: Linux tests with 90% coverage requirement
 # Stage 2: Windows .NET Core and .NET Framework tests (only if Linux passes)
 # Stage 3: macOS tests (only if Stage 2 passes)
+#
+# SECURITY NOTE:
+# - Uses pull_request_target to run workflow from the trusted main branch, not from the PR branch
+# - This prevents malicious workflow YAML changes in untrusted PR branches from taking effect
+# - All checkout steps use PR refs (refs/pull/*/head) to check out PR code from the base repo
+# - persist-credentials: false prevents the checkout token from being written to git config for subsequent git commands
+#   (it does NOT, by itself, prevent steps from accessing github.token / GITHUB_TOKEN if you explicitly expose it)
+# - Default GITHUB_TOKEN permissions are restricted to read-only repository contents to limit impact if exposed
 
 name: PR Checks v3 (Gated)
 
@@ -9,10 +17,9 @@ permissions:
   contents: read
   
 on:
-  pull_request: 
-    branches: 
+  pull_request_target:  # Runs from the main branch, not from PR branch
+    branches:
       - main
-      - develop
     paths-ignore:
       - '**.md'
       - 'docs/**'
@@ -28,6 +35,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: refs/pull/${{ github.event.pull_request.number }}/head
+          persist-credentials: false
 
       # Fix for .NET 5.0 on Ubuntu 22.04+ - install libssl1.1
       - name: Install OpenSSL 1.1 for .NET 5.0
@@ -203,10 +213,10 @@ jobs:
             tests/**/bin/Release
 
   # ============================================================================
-  # STAGE 2: Windows - .NET Core/5+ and .NET Framework Tests (Gated by Stage 1)
+  # STAGE 2: Windows - All .NET Tests (Gated by Stage 1)
   # ============================================================================
   test-windows:
-    name: "Stage 2: Windows Tests (.NET 5.0-10.0 + .NET Framework 4.6.2-4.8.1)"
+    name: "Stage 2: Windows Tests (.NET 5.0-10.0, Framework 4.6.2-4.8.1)"
     runs-on: windows-latest
     needs: test-linux-core
     if: github.repository != 'Chris-Wolfgang/repo-template'
@@ -214,6 +224,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: refs/pull/${{ github.event.pull_request.number }}/head
+          persist-credentials: false
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -310,7 +323,7 @@ jobs:
       - name: Build solution
         run: dotnet build --no-restore --configuration Release
 
-      - name: Run tests (All frameworks)
+      - name: Run all .NET tests (.NET 5.0-10.0 and Framework 4.6.2-4.8.1)
         shell: pwsh
         run: |
           $testProjects = Get-ChildItem -Path './tests' -Recurse -Filter '*.csproj'
@@ -360,8 +373,11 @@ jobs:
     if: github.repository != 'Chris-Wolfgang/repo-template'
     
     steps:
-      - name:  Checkout code
+      - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: refs/pull/${{ github.event.pull_request.number }}/head
+          persist-credentials: false
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -489,6 +505,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: refs/pull/${{ github.event.pull_request.number }}/head
+          persist-credentials: false
 
       - name: Install DevSkim CLI
         run: dotnet tool install --global Microsoft.CST.DevSkim.CLI
