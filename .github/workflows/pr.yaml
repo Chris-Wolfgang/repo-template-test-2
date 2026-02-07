@@ -245,7 +245,7 @@ jobs:
       - name: Build solution
         run: dotnet build --no-restore --configuration Release
 
-      - name: Run tests (.NET 5.0 - 10.0)
+      - name: Run all .NET tests (.NET 5.0-10.0 and Framework 4.6.2-4.8.1)
         shell: pwsh
         run: |
           $testProjects = Get-ChildItem -Path './tests' -Recurse -Filter '*.csproj'
@@ -261,46 +261,8 @@ jobs:
           $testProjects | ForEach-Object { Write-Host $_.FullName -ForegroundColor White }
           Write-Host ""
           
-          $frameworks = @('net5.0', 'net6.0', 'net7.0', 'net8.0', 'net9.0', 'net10.0')
-          
-          foreach ($testProj in $testProjects) {
-            Write-Host "==========================================" -ForegroundColor Cyan
-            Write-Host "Testing project: $($testProj.FullName)" -ForegroundColor Cyan
-            Write-Host "==========================================" -ForegroundColor Cyan
-            
-            foreach ($fw in $frameworks) {
-              Write-Host "Testing framework:  $fw" -ForegroundColor Yellow
-              
-              dotnet test $testProj.FullName `
-                --configuration Release `
-                --framework $fw `
-                --logger "console;verbosity=normal"
-              
-              if ($LASTEXITCODE -ne 0) {
-                Write-Error "Tests failed for $fw in $($testProj.Name)"
-                exit 1
-              }
-            }
-            Write-Host ""
-          }
-
-      - name: Run .NET Framework tests (4.6.2 - 4.8.1)
-        shell: pwsh
-        run: |
-          $testProjects = Get-ChildItem -Path './tests' -Recurse -Filter '*.csproj'
-          
-          if ($testProjects.Count -eq 0) {
-            Write-Error "❌ No test projects found in ./tests directory!"
-            exit 1
-          }
-          
-          Write-Host "==========================================" -ForegroundColor Cyan
-          Write-Host "Found test projects:" -ForegroundColor Cyan
-          Write-Host "==========================================" -ForegroundColor Cyan
-          $testProjects | ForEach-Object { Write-Host $_.FullName -ForegroundColor White }
-          Write-Host ""
-          
-          $frameworks = @('net462', 'net472', 'net48', 'net481')
+          # Combined frameworks: .NET 5.0-10.0 and .NET Framework 4.6.2-4.8.1
+          $frameworks = @('net5.0', 'net6.0', 'net7.0', 'net8.0', 'net9.0', 'net10.0', 'net462', 'net472', 'net48', 'net481')
           
           foreach ($testProj in $testProjects) {
             Write-Host "==========================================" -ForegroundColor Cyan
