@@ -30,7 +30,7 @@ Prevent Merging When Checks Fail
 These settings require that all checks in the pr.yaml file succeed before you can merge a branch into main
 
 
-**Note:** The pr.yaml workflow uses `pull_request_target` to always run from the main branch, even for PRs from feature branches. This prevents malicious workflow modifications in untrusted PR branches while still testing the PR's code.
+**Note:** The pr.yaml workflow uses `pull_request_target` to always run from the trusted base branch of the pull request (for example, `main` or `develop`), even for PRs from feature branches. This prevents malicious workflow modifications in untrusted PR branches while still testing the PR's code.
 
 1. Go to your repository’s Settings → Branches.
 2. Under “Branch protection rules,” edit the rule for main.

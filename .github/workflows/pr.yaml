@@ -4,9 +4,9 @@
 # Stage 3: macOS tests (only if Stage 2 passes)
 #
 # SECURITY NOTE:
-# - Uses pull_request_target to run workflow from main branch (not PR branch)
+# - Uses pull_request_target to run workflow from trusted base branch (main/develop), not from PR branch
 # - This prevents malicious workflow modifications in untrusted PR branches
-# - All checkout steps explicitly use github.event.pull_request.head.sha to test the PR's code
+# - All checkout steps explicitly check out the PR's code from the head repository
 # - Permissions are restricted to read-only access
 
 name: PR Checks v3 (Gated)
@@ -19,6 +19,9 @@ on:
     branches:
       - main
       - develop
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
 jobs:
   # ============================================================================
   # STAGE 1: Linux - .NET Core/5+ Tests with Coverage Gate
@@ -32,7 +35,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
 
       # Fix for .NET 5.0 on Ubuntu 22.04+ - install libssl1.1
       - name: Install OpenSSL 1.1 for .NET 5.0
@@ -220,7 +224,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -288,7 +293,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -354,7 +360,8 @@ jobs:
       - name:  Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -483,7 +490,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
 
       - name: Install DevSkim CLI
         run: dotnet tool install --global Microsoft.CST.DevSkim.CLI
