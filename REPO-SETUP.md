@@ -35,7 +35,7 @@ These settings require that all checks in the pr.yaml file succeed before you ca
 1. Go to your repository’s Settings → Branches.
 2. Under “Branch protection rules,” edit the rule for main.
 3. Check “Require status checks to pass before merging.”
-4. Select "PR Checks v3 (Gated)" workflow (it will be listed after it runs at least once).
+4. In the "Status checks that are required" list, select the status check contexts produced by your PR workflow jobs (for example, "Stage 1: Linux Tests", "Stage 2a: Windows Tests", "Stage 2b: Windows .NET Framework Tests", "Stage 3: macOS Tests", and "Security Scan (DevSkim)"). These options appear after the workflow has run at least once on `main`.
 5. Enable “Require branches to be up to date before merging.”
 6. Check `Restrict deletions`
 7. Check `Require a pull request before merging`

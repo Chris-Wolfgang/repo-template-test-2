@@ -4,11 +4,12 @@
 # Stage 3: macOS tests (only if Stage 2 passes)
 #
 # SECURITY NOTE:
-# - Uses pull_request_target to run workflow from the trusted main branch, not from PR branch
-# - This prevents malicious workflow modifications in untrusted PR branches
-# - All checkout steps use repository + ref to support fork-based PRs
-# - persist-credentials: false prevents the GitHub token from being available to PR code
-# - Permissions are restricted to read-only access
+# - Uses pull_request_target to run workflow from the trusted main branch, not from the PR branch
+# - This prevents malicious workflow YAML changes in untrusted PR branches from taking effect
+# - All checkout steps use PR refs (refs/pull/*/head) to check out PR code from the base repo
+# - persist-credentials: false prevents the checkout token from being written to git config for subsequent git commands
+#   (it does NOT, by itself, prevent steps from accessing github.token / GITHUB_TOKEN if you explicitly expose it)
+# - Default GITHUB_TOKEN permissions are restricted to read-only repository contents to limit impact if exposed
 
 name: PR Checks v3 (Gated)
 
@@ -35,8 +36,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: refs/pull/${{ github.event.pull_request.number }}/head
           persist-credentials: false
 
       # Fix for .NET 5.0 on Ubuntu 22.04+ - install libssl1.1
@@ -225,8 +225,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: refs/pull/${{ github.event.pull_request.number }}/head
           persist-credentials: false
 
       - name: Setup .NET
@@ -295,8 +294,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: refs/pull/${{ github.event.pull_request.number }}/head
           persist-credentials: false
 
       - name: Setup .NET
@@ -363,8 +361,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: refs/pull/${{ github.event.pull_request.number }}/head
           persist-credentials: false
 
       - name: Setup .NET
@@ -494,8 +491,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: refs/pull/${{ github.event.pull_request.number }}/head
           persist-credentials: false
 
       - name: Install DevSkim CLI
