@@ -205,8 +205,8 @@ jobs:
   # ============================================================================
   # STAGE 2: Windows - .NET Core/5+ and .NET Framework Tests (Gated by Stage 1)
   # ============================================================================
-  test-windows-core:
-    name: "Stage 2a: Windows Tests (.NET 5.0-10.0)"
+  test-windows:
+    name: "Stage 2: Windows Tests (.NET 5.0-10.0 + .NET Framework 4.6.2-4.8.1)"
     runs-on: windows-latest
     needs: test-linux-core
     if: github.repository != 'Chris-Wolfgang/repo-template'
@@ -226,66 +226,83 @@ jobs:
             9.0.x
             10.0.x
 
-      - name: Restore dependencies
-        run: dotnet restore
-
-      - name: Build solution
-        run: dotnet build --no-restore --configuration Release
-
-      - name: Run tests (.NET Core 5.0 - 10.0)
+      - name: Install .NET Framework Developer Packs (4.6.2, 4.7.2, 4.8.1)
         shell: pwsh
         run: |
-          $testProjects = Get-ChildItem -Path './tests' -Recurse -Filter '*.csproj'
-          
-          if ($testProjects.Count -eq 0) {
-            Write-Error "❌ No test projects found in ./tests directory!"
-            exit 1
-          }
-          
-          Write-Host "==========================================" -ForegroundColor Cyan
-          Write-Host "Found test projects:" -ForegroundColor Cyan
-          Write-Host "==========================================" -ForegroundColor Cyan
-          $testProjects | ForEach-Object { Write-Host $_.FullName -ForegroundColor White }
-          Write-Host ""
-          
-          $frameworks = @('net5.0', 'net6.0', 'net7.0', 'net8.0', 'net9.0', 'net10.0')
-          
-          foreach ($testProj in $testProjects) {
-            Write-Host "==========================================" -ForegroundColor Cyan
-            Write-Host "Testing project: $($testProj.FullName)" -ForegroundColor Cyan
-            Write-Host "==========================================" -ForegroundColor Cyan
-            
-            foreach ($fw in $frameworks) {
-              Write-Host "Testing framework:  $fw" -ForegroundColor Yellow
-              
-              dotnet test $testProj.FullName `
-                --configuration Release `
-                --framework $fw `
-                --logger "console;verbosity=normal"
-              
-              if ($LASTEXITCODE -ne 0) {
-                Write-Error "Tests failed for $fw in $($testProj.Name)"
-                exit 1
-              }
+          # Define Developer Pack URLs and versions
+          $devPacks = @(
+            @{
+              Version = "4.6.2"
+              Url = "https://download.microsoft.com/download/F/1/D/F1DEB8DB-D277-4EF9-9F48-3A65D4D8F965/NDP462-DevPack-KB3151934-ENU.exe"
+              FileName = "ndp462-devpack.exe"
+            },
+            @{
+              Version = "4.7.2"
+              Url = "https://download.microsoft.com/download/0/8/E/08E0386B-F6AF-4625-9AB8-E77DEB2C0D86/NDP472-DevPack-ENU.exe"
+              FileName = "ndp472-devpack.exe"
+            },
+            @{
+              Version = "4.8.1"
+              Url = "https://download.visualstudio.microsoft.com/download/pr/6f083c7e-bd40-44d4-9e06-2a7b93a5d3a9/7d34c5e1e9bbfc9fa8e7d23fa3e8a9ef/ndp481-devpack-enu.exe"
+              FileName = "ndp481-devpack.exe"
             }
+          )
+          
+          $installed = 0
+          $skipped = 0
+          
+          foreach ($pack in $devPacks) {
+            Write-Host "========================================" -ForegroundColor Cyan
+            Write-Host "Processing .NET Framework $($pack.Version) Developer Pack" -ForegroundColor Cyan
+            Write-Host "========================================" -ForegroundColor Cyan
+            
+            # Check if targeting pack is already installed
+            $targetingPackPath = "C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v$($pack.Version)"
+            if (Test-Path $targetingPackPath) {
+              Write-Host "✅ .NET Framework $($pack.Version) targeting pack already installed at: $targetingPackPath" -ForegroundColor Green
+              Write-Host "Skipping installation for version $($pack.Version)" -ForegroundColor Yellow
+              Write-Host ""
+              $skipped++
+              continue
+            }
+            
+            $output = "$env:TEMP\$($pack.FileName)"
+            
+            Write-Host "Downloading .NET Framework $($pack.Version) Developer Pack..." -ForegroundColor Yellow
+            try {
+              Invoke-WebRequest -Uri $pack.Url -OutFile $output -ErrorAction Stop
+              Write-Host "✅ Download completed" -ForegroundColor Green
+            } catch {
+              Write-Error "❌ Failed to download .NET Framework $($pack.Version) Developer Pack: $_"
+              exit 1
+            }
+            
+            Write-Host "Installing .NET Framework $($pack.Version) Developer Pack..." -ForegroundColor Yellow
+            $process = Start-Process -FilePath $output -ArgumentList "/quiet", "/norestart" -Wait -NoNewWindow -PassThru
+            
+            # Exit code 0 = success, 3010 = success but reboot required
+            if ($process.ExitCode -ne 0 -and $process.ExitCode -ne 3010) {
+              Write-Error "❌ Installation failed with exit code: $($process.ExitCode)"
+              Remove-Item $output -Force -ErrorAction SilentlyContinue
+              exit 1
+            }
+            
+            Write-Host "✅ .NET Framework $($pack.Version) Developer Pack installed successfully (exit code: $($process.ExitCode))" -ForegroundColor Green
+            $installed++
+            
+            # Clean up installer file
+            Write-Host "Cleaning up installer file..." -ForegroundColor Yellow
+            Remove-Item $output -Force -ErrorAction SilentlyContinue
+            Write-Host "✅ Installer file removed" -ForegroundColor Green
             Write-Host ""
           }
-
-  test-windows-framework: 
-    name: "Stage 2b: Windows .NET Framework Tests (4.6.2-4.8.1)"
-    runs-on: windows-latest
-    needs: test-linux-core
-    if: github.repository != 'Chris-Wolfgang/repo-template'
-    
-    steps: 
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: |
-            8.0.x
+          
+          Write-Host "========================================" -ForegroundColor Cyan
+          Write-Host "✅ Developer Pack Installation Summary" -ForegroundColor Green
+          Write-Host "   Installed: $installed" -ForegroundColor White
+          Write-Host "   Skipped (already present): $skipped" -ForegroundColor White
+          Write-Host "   Total processed: $($installed + $skipped)" -ForegroundColor White
+          Write-Host "========================================" -ForegroundColor Cyan
 
       - name: Restore dependencies
         run: dotnet restore
@@ -293,7 +310,7 @@ jobs:
       - name: Build solution
         run: dotnet build --no-restore --configuration Release
 
-      - name:  Run .NET Framework tests (4.6.2 - 4.8.1)
+      - name: Run tests (All frameworks)
         shell: pwsh
         run: |
           $testProjects = Get-ChildItem -Path './tests' -Recurse -Filter '*.csproj'
@@ -309,7 +326,8 @@ jobs:
           $testProjects | ForEach-Object { Write-Host $_.FullName -ForegroundColor White }
           Write-Host ""
           
-          $frameworks = @('net462', 'net472', 'net48', 'net481')
+          # Test both .NET Core/5+ and .NET Framework versions
+          $frameworks = @('net5.0', 'net6.0', 'net7.0', 'net8.0', 'net9.0', 'net10.0', 'net462', 'net472', 'net48', 'net481')
           
           foreach ($testProj in $testProjects) {
             Write-Host "==========================================" -ForegroundColor Cyan
@@ -338,7 +356,7 @@ jobs:
   test-macos-core:
     name: "Stage 3: macOS Tests (.NET 6.0-10.0)"
     runs-on: macos-latest
-    needs: [test-windows-core, test-windows-framework]
+    needs: test-windows
     if: github.repository != 'Chris-Wolfgang/repo-template'
     
     steps:
