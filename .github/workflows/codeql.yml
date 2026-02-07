@@ -38,23 +38,24 @@ jobs:
           10.0.x
 
     - name: Build for CodeQL Analysis
+      shell: pwsh
       run: |
-        echo "Building solution for CodeQL analysis..."
+        Write-Host "Building solution for CodeQL analysis..."
         
-        # Find solution file (.sln or .slnx) with correct syntax
-        solution=$(find . -maxdepth 2 \( -name "*.sln" -o -name "*.slnx" \) | head -n 1)
+        # Find solution file (.sln or .slnx)
+        $solution = Get-ChildItem -Path . -Depth 2 -Include "*.sln", "*.slnx" | Select-Object -First 1
         
-        if [ -n "$solution" ]; then
-          echo "Found solution: $solution"
-          dotnet restore "$solution"
-          dotnet build "$solution" --configuration Release --no-restore
-        else
-          echo "No solution file found, building all projects..."
+        if ($solution) {
+          Write-Host "Found solution: $($solution.FullName)"
+          dotnet restore $solution.FullName
+          dotnet build $solution.FullName --configuration Release --no-restore
+        } else {
+          Write-Host "No solution file found, building all projects..."
           dotnet restore
           dotnet build --configuration Release --no-restore
-        fi
+        }
         
-        echo "✅ Build completed for CodeQL analysis"
+        Write-Host "✅ Build completed for CodeQL analysis"
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
