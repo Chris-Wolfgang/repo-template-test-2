@@ -12,5 +12,14 @@ public class HelloWorld
     /// Prints "Hello World" to the console.
     /// </summary>
     /// <param name="tw">The text writer to write the output to.</param>
-    public void Print(TextWriter tw) => tw.WriteLine("Hello World");
+    /// <exception cref="ArgumentNullException"></exception>
+    public void Print(TextWriter tw)
+    {
+        if (tw == null)
+        {
+            throw new ArgumentNullException(nameof(tw));
+        }
+
+        tw.WriteLine("Hello World");
+    }
 }

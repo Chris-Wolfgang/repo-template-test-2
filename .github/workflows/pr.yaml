@@ -213,10 +213,10 @@ jobs:
             tests/**/bin/Release
 
   # ============================================================================
-  # STAGE 2: Windows - .NET Core/5+ and .NET Framework Tests (Gated by Stage 1)
+  # STAGE 2: Windows - All .NET Tests (Gated by Stage 1)
   # ============================================================================
-  test-windows-core:
-    name: "Stage 2a: Windows Tests (.NET 5.0-10.0)"
+  test-windows:
+    name: "Stage 2: Windows Tests (.NET 5.0-10.0, Framework 4.6.2-4.8.1)"
     runs-on: windows-latest
     needs: test-linux-core
     if: github.repository != 'Chris-Wolfgang/repo-template'
@@ -245,7 +245,7 @@ jobs:
       - name: Build solution
         run: dotnet build --no-restore --configuration Release
 
-      - name: Run tests (.NET Core 5.0 - 10.0)
+      - name: Run tests (.NET 5.0 - 10.0)
         shell: pwsh
         run: |
           $testProjects = Get-ChildItem -Path './tests' -Recurse -Filter '*.csproj'
@@ -284,32 +284,7 @@ jobs:
             Write-Host ""
           }
 
-  test-windows-framework: 
-    name: "Stage 2b: Windows .NET Framework Tests (4.6.2-4.8.1)"
-    runs-on: windows-latest
-    needs: test-linux-core
-    if: github.repository != 'Chris-Wolfgang/repo-template'
-    
-    steps: 
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          ref: refs/pull/${{ github.event.pull_request.number }}/head
-          persist-credentials: false
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: |
-            8.0.x
-
-      - name: Restore dependencies
-        run: dotnet restore
-
-      - name: Build solution
-        run: dotnet build --no-restore --configuration Release
-
-      - name:  Run .NET Framework tests (4.6.2 - 4.8.1)
+      - name: Run .NET Framework tests (4.6.2 - 4.8.1)
         shell: pwsh
         run: |
           $testProjects = Get-ChildItem -Path './tests' -Recurse -Filter '*.csproj'
@@ -354,7 +329,7 @@ jobs:
   test-macos-core:
     name: "Stage 3: macOS Tests (.NET 6.0-10.0)"
     runs-on: macos-latest
-    needs: [test-windows-core, test-windows-framework]
+    needs: test-windows
     if: github.repository != 'Chris-Wolfgang/repo-template'
     
     steps:
