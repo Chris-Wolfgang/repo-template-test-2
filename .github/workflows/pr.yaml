@@ -287,30 +287,60 @@ jobs:
           dotnet-version: |
             8.0.x
 
-      - name: Install .NET Framework 4.6.2 Developer Pack
+      - name: Install .NET Framework Developer Packs (4.6.2, 4.7.2, 4.8.1)
         shell: pwsh
         run: |
-          Write-Host "Downloading .NET Framework 4.6.2 Developer Pack..." -ForegroundColor Cyan
-          $url = "https://download.microsoft.com/download/F/1/D/F1DEB8DB-D277-4EF9-9F48-3A65D4D8F965/NDP462-DevPack-KB3151934-ENU.exe"
-          $output = "$env:TEMP\ndp462-devpack.exe"
+          # Define Developer Pack URLs and versions
+          $devPacks = @(
+            @{
+              Version = "4.6.2"
+              Url = "https://download.microsoft.com/download/F/1/D/F1DEB8DB-D277-4EF9-9F48-3A65D4D8F965/NDP462-DevPack-KB3151934-ENU.exe"
+              FileName = "ndp462-devpack.exe"
+            },
+            @{
+              Version = "4.7.2"
+              Url = "https://download.microsoft.com/download/0/8/E/08E0386B-F6AF-4625-9AB8-E77DEB2C0D86/NDP472-DevPack-ENU.exe"
+              FileName = "ndp472-devpack.exe"
+            },
+            @{
+              Version = "4.8.1"
+              Url = "https://download.visualstudio.microsoft.com/download/pr/6f083c7e-bd40-44d4-9e06-2a7b93a5d3a9/7d34c5e1e9bbfc9fa8e7d23fa3e8a9ef/ndp481-devpack-enu.exe"
+              FileName = "ndp481-devpack.exe"
+            }
+          )
           
-          try {
-            Invoke-WebRequest -Uri $url -OutFile $output -UseBasicParsing -ErrorAction Stop
-          } catch {
-            Write-Error "❌ Failed to download .NET Framework 4.6.2 Developer Pack: $_"
-            exit 1
+          foreach ($pack in $devPacks) {
+            Write-Host "========================================" -ForegroundColor Cyan
+            Write-Host "Processing .NET Framework $($pack.Version) Developer Pack" -ForegroundColor Cyan
+            Write-Host "========================================" -ForegroundColor Cyan
+            
+            $output = "$env:TEMP\$($pack.FileName)"
+            
+            Write-Host "Downloading .NET Framework $($pack.Version) Developer Pack..." -ForegroundColor Yellow
+            try {
+              Invoke-WebRequest -Uri $pack.Url -OutFile $output -UseBasicParsing -ErrorAction Stop
+              Write-Host "✅ Download completed" -ForegroundColor Green
+            } catch {
+              Write-Error "❌ Failed to download .NET Framework $($pack.Version) Developer Pack: $_"
+              exit 1
+            }
+            
+            Write-Host "Installing .NET Framework $($pack.Version) Developer Pack..." -ForegroundColor Yellow
+            $process = Start-Process -FilePath $output -ArgumentList "/quiet", "/norestart" -Wait -NoNewWindow -PassThru
+            
+            # Exit code 0 = success, 3010 = success but reboot required
+            if ($process.ExitCode -ne 0 -and $process.ExitCode -ne 3010) {
+              Write-Error "❌ Installation failed with exit code: $($process.ExitCode)"
+              exit 1
+            }
+            
+            Write-Host "✅ .NET Framework $($pack.Version) Developer Pack installed successfully (exit code: $($process.ExitCode))" -ForegroundColor Green
+            Write-Host ""
           }
           
-          Write-Host "Installing .NET Framework 4.6.2 Developer Pack..." -ForegroundColor Cyan
-          $process = Start-Process -FilePath $output -ArgumentList "/quiet", "/norestart" -Wait -NoNewWindow -PassThru
-          
-          # Exit code 0 = success, 3010 = success but reboot required
-          if ($process.ExitCode -ne 0 -and $process.ExitCode -ne 3010) {
-            Write-Error "❌ Installation failed with exit code: $($process.ExitCode)"
-            exit 1
-          }
-          
-          Write-Host "✅ .NET Framework 4.6.2 Developer Pack installed successfully (exit code: $($process.ExitCode))" -ForegroundColor Green
+          Write-Host "========================================" -ForegroundColor Cyan
+          Write-Host "✅ All Developer Packs installed successfully" -ForegroundColor Green
+          Write-Host "========================================" -ForegroundColor Cyan
 
       - name: Restore dependencies
         run: dotnet restore
