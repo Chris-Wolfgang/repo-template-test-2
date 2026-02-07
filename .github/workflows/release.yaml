@@ -236,7 +236,6 @@ jobs:
     name: Publish to NuGet.org
     needs: pack-and-validate
     runs-on: ubuntu-latest
-    environment: production  # Requires manual approval in repository settings
     steps:
       - name: Download packages
         uses: actions/download-artifact@v4

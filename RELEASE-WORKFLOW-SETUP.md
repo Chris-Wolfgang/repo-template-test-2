@@ -4,38 +4,19 @@ This guide explains how to configure the repository after merging the updated `r
 
 ## Overview
 
-The new release workflow implements a comprehensive validation and deployment process that:
+The release workflow implements a comprehensive validation and automatic deployment process that:
 - ✅ Tests all frameworks (net5.0-10.0, net462-481) on Windows
 - ✅ Enforces 90% code coverage threshold
 - ✅ Validates NuGet package integrity with smoke tests
-- ✅ Requires manual approval before publishing to NuGet.org
+- ✅ Automatically publishes to NuGet.org after validation passes
 - ✅ Creates GitHub releases with artifacts and coverage reports
 - ✅ Eliminates duplicate build work for faster releases
 
 ## Required Post-Merge Configuration
 
-After merging this PR, complete the following setup steps:
+After merging this PR, complete the following setup step:
 
-### 1. Create Production Environment
-
-**Location:** Settings → Environments → New environment
-
-1. Click **"New environment"**
-2. Name: `production`
-3. Click **"Configure environment"**
-4. Under **"Deployment protection rules"**:
-   - ✅ **Check "Required reviewers"**
-   - Add yourself or release team members as reviewers
-5. Under **"Deployment branches and tags"**:
-   - Select **"Selected branches and tags"**
-   - Click **"Add deployment branch or tag rule"**
-   - Type: `Tag`
-   - Pattern: `v*.*.*`
-6. Click **"Save protection rules"**
-
-**What this does:** Adds a manual approval gate before NuGet publishing. When a release workflow runs, it will pause at the `publish-nuget` job and wait for an authorized reviewer to approve the deployment.
-
-### 2. Add NuGet API Key Secret
+### Add NuGet API Key Secret
 
 **Location:** Settings → Secrets and variables → Actions → New repository secret
 
@@ -49,7 +30,7 @@ After merging this PR, complete the following setup steps:
 
 **What this does:** Allows the workflow to authenticate with NuGet.org and publish packages. The workflow validates this secret exists before attempting to publish.
 
-### 3. Verify Branch Protection Rules
+### Verify Branch Protection Rules
 
 **Location:** Settings → Branches → main
 
@@ -95,15 +76,10 @@ git push origin v0.0.1-test
    - Uploads packages as artifacts
    - ✅ Auto-passes if packages are valid
 
-3. **Job 3: publish-nuget** ⏸️ **MANUAL APPROVAL REQUIRED**
-   - Workflow pauses and requests approval
-   - Go to: **Actions → Release on Version Tag → [Your run] → Review deployments**
-   - Click **"Review deployments"**
-   - Select `production` environment
-   - Click **"Approve and deploy"**
+3. **Job 3: publish-nuget** (1-2 minutes)
    - Validates NUGET_API_KEY secret
-   - Publishes packages to NuGet.org
-   - ✅ Completes after approval
+   - Publishes packages to NuGet.org automatically
+   - ✅ Auto-completes if secret is valid
 
 4. **Job 4: create-github-release** (1-2 minutes)
    - Creates GitHub release
@@ -115,7 +91,6 @@ git push origin v0.0.1-test
 ### Monitoring the Workflow
 
 - **Actions Tab:** Shows workflow progress in real-time
-- **Notifications:** You'll receive email when approval is needed
 - **Artifacts:** Each job uploads artifacts (coverage reports, packages)
 - **Releases:** Check the Releases page after successful completion
 
@@ -129,14 +104,6 @@ git push origin v0.0.1-test
 1. Verify the secret name is exactly `NUGET_API_KEY` (case-sensitive)
 2. Re-add the secret in Settings → Secrets → Actions
 3. Re-run the failed job (don't re-tag, just re-run)
-
-### "No reviewers configured for production environment" Error
-
-**Problem:** Workflow can't request approval because no reviewers are set.
-
-**Solution:**
-1. Go to Settings → Environments → production
-2. Add at least one required reviewer
 3. Re-run the workflow
 
 ### Tests Fail on Specific Framework
@@ -223,10 +190,9 @@ git push origin v1.0.0
                             ▼ (only if packing succeeds)
 ┌─────────────────────────────────────────────────────────────┐
 │  Job 3: publish-nuget (Ubuntu)                              │
-│  ⏸️  MANUAL APPROVAL REQUIRED (production environment)      │
 │  • Download packages                                        │
 │  • Validate NUGET_API_KEY                                   │
-│  • Publish to NuGet.org                                     │
+│  • Publish to NuGet.org automatically                       │
 └─────────────────────────────────────────────────────────────┘
                             │
                             ▼ (only if publishing succeeds)
@@ -246,7 +212,7 @@ git push origin v1.0.0
 | **Framework Coverage** | Default framework only | All frameworks (net5.0-10.0, net462-481) |
 | **Code Coverage** | Not enforced | 90% threshold enforced |
 | **Package Validation** | None | Smoke test installation |
-| **Deployment Safety** | Auto-publish | Manual approval gate |
+| **Deployment** | Incomplete publish script | Automatic publishing after validation |
 | **Secret Validation** | None | Validates before publishing |
 | **GitHub Releases** | Not created | Automated with artifacts |
 | **Build Efficiency** | Duplicate builds in each job | Build once per job with dependencies |
