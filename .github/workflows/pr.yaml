@@ -4,10 +4,10 @@
 # Stage 3: macOS tests (only if Stage 2 passes)
 #
 # SECURITY NOTE:
-# - Uses pull_request_target to run workflow from trusted base branch (main/develop), not from PR branch
+# - Uses pull_request_target to run workflow from the trusted base branch (main/develop), not from PR branch
 # - This prevents malicious workflow modifications in untrusted PR branches
-# - All checkout steps use github.event.pull_request.head.sha to test the PR's code
-# - Using SHA instead of repository+ref prevents security issues with fork-based PRs
+# - All checkout steps use repository + ref to support fork-based PRs
+# - persist-credentials: false prevents the GitHub token from being available to PR code
 # - Permissions are restricted to read-only access
 
 name: PR Checks v3 (Gated)
@@ -16,7 +16,7 @@ permissions:
   contents: read
   
 on:
-  pull_request_target:  # Runs from base branch (main), not from PR branch
+  pull_request_target:  # Runs from the base branch (main/develop), not from PR branch
     branches:
       - main
       - develop
@@ -36,7 +36,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
           ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
 
       # Fix for .NET 5.0 on Ubuntu 22.04+ - install libssl1.1
       - name: Install OpenSSL 1.1 for .NET 5.0
@@ -224,7 +226,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
           ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -292,7 +296,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
           ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -358,7 +364,9 @@ jobs:
       - name:  Checkout code
         uses: actions/checkout@v4
         with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
           ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -487,7 +495,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
           ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
 
       - name: Install DevSkim CLI
         run: dotnet tool install --global Microsoft.CST.DevSkim.CLI
