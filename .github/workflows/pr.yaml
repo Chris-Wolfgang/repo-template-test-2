@@ -216,7 +216,7 @@ jobs:
   # STAGE 2: Windows - All .NET Tests (Gated by Stage 1)
   # ============================================================================
   test-windows:
-    name: "Stage 2: Windows Tests (All .NET versions)"
+    name: "Stage 2: Windows Tests (.NET 5.0-10.0, Framework 4.6.2-4.8.1)"
     runs-on: windows-latest
     needs: test-linux-core
     if: github.repository != 'Chris-Wolfgang/repo-template'
