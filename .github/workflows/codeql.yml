@@ -11,7 +11,7 @@ on:
 jobs:
   analyze:
     name: CodeQL analysis (csharp)
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     permissions:
       actions: read
       contents: read
@@ -35,7 +35,7 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: |
-          8.0.x
+          10.0.x
 
     - name: Build for CodeQL Analysis
       run: |
