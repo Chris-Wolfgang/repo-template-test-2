@@ -43,7 +43,7 @@ jobs:
         Write-Host "Building solution for CodeQL analysis..."
         
         # Find solution file (.sln or .slnx)
-        $solution = Get-ChildItem -Path . -Depth 2 -Include "*.sln", "*.slnx" | Select-Object -First 1
+        $solution = Get-ChildItem -Path . -Recurse -Depth 2 -Include "*.sln", "*.slnx" | Select-Object -First 1
         
         if ($solution) {
           Write-Host "Found solution: $($solution.FullName)"
