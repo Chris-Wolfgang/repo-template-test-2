@@ -361,7 +361,7 @@ jobs:
     if: github.repository != 'Chris-Wolfgang/repo-template'
     
     steps:
-      - name:  Checkout code
+      - name: Checkout code
         uses: actions/checkout@v4
         with:
           repository: ${{ github.event.pull_request.head.repo.full_name }}
