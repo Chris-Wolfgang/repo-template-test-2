@@ -4,7 +4,7 @@
 # Stage 3: macOS tests (only if Stage 2 passes)
 #
 # SECURITY NOTE:
-# - Uses pull_request_target to run workflow from the trusted base branch (main/develop), not from PR branch
+# - Uses pull_request_target to run workflow from the trusted main branch, not from PR branch
 # - This prevents malicious workflow modifications in untrusted PR branches
 # - All checkout steps use repository + ref to support fork-based PRs
 # - persist-credentials: false prevents the GitHub token from being available to PR code
@@ -16,10 +16,9 @@ permissions:
   contents: read
   
 on:
-  pull_request_target:  # Runs from the base branch (main/develop), not from PR branch
+  pull_request_target:  # Runs from the main branch, not from PR branch
     branches:
       - main
-      - develop
     paths-ignore:
       - '**.md'
       - 'docs/**'
