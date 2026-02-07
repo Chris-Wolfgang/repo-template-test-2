@@ -257,7 +257,7 @@ jobs:
             
             Write-Host "Downloading .NET Framework $($pack.Version) Developer Pack..." -ForegroundColor Yellow
             try {
-              Invoke-WebRequest -Uri $pack.Url -OutFile $output -UseBasicParsing -ErrorAction Stop
+              Invoke-WebRequest -Uri $pack.Url -OutFile $output -ErrorAction Stop
               Write-Host "✅ Download completed" -ForegroundColor Green
             } catch {
               Write-Error "❌ Failed to download .NET Framework $($pack.Version) Developer Pack: $_"
